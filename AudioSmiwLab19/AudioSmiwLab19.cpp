@@ -1,6 +1,41 @@
 #include <iostream>
 #include <fstream>
 
+class Oscillator {
+private:
+    int rate;
+    int control;
+    int mod;
+
+public:
+    Oscillator(int rate) {
+        control = 1;
+        mod = 0;
+        rate = rate;
+    }
+
+    short int process(double xin) {
+        short int yout;
+        double m;
+
+        m = (double)mod / rate;
+        yout = m * xin;
+        return yout;
+    }
+
+    void sweep() {
+        mod += control;
+
+        if (mod > rate) {
+            control = -1;
+        }
+        else if (!mod) {
+            control = 1;
+        }
+    }
+};
+
+
 void transform(std::ifstream& input, std::ofstream& output, std::string filename);
 
 int main()
@@ -21,7 +56,7 @@ void transform(std::ifstream& input, std::ofstream& output, std::string filename
 
     if (input.is_open()) {
 
-                                            // inicjalizacja oscylatora
+        Oscillator oscillator(44100);                       // inicjalizacja oscylatora
               
         int i = 0;
         while (input.read(sampleInput, sizeof(short int))) // przetworzenie danych w petli
@@ -35,9 +70,9 @@ void transform(std::ifstream& input, std::ofstream& output, std::string filename
 
             // == transfromacja ==
 
-                                            // pobranie wartosci z oscylatora
+            sample = oscillator.process(sample);                                // pobranie wartosci z oscylatora
                                             // dodanie wartosci spod oscylatora do aktualnie pobranych bitow
-                                            // aktualizacja oscylatora
+            oscillator.sweep();             // aktualizacja oscylatora
                                         
 
             // == koniec transformacji ==
