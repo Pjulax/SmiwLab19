@@ -9,17 +9,17 @@ private:
 
 public:
     Oscillator(int rate) {
-        control = 1;
-        mod = 0;
-        rate = rate;
+        this->control = 1;
+        this->mod = 0;
+        this->rate = rate;
     }
 
     short int process(double xin) {
         short int yout;
         double m;
 
-        m = (double)mod / rate;
-        yout = m * xin;
+        m = (double)mod *0.5/ rate;
+        yout = (short int)(m * xin);
         return yout;
     }
 
@@ -42,7 +42,7 @@ int main()
 {
     std::ifstream rawInput;
     std::ofstream rawOutput;
-    std::string filename = "123";
+    std::string filename = "acoustic";
     transform(rawInput, rawOutput, filename);
     return 0;
 }
@@ -56,21 +56,22 @@ void transform(std::ifstream& input, std::ofstream& output, std::string filename
 
     if (input.is_open()) {
 
-        Oscillator oscillator(44100);                       // inicjalizacja oscylatora
+        Oscillator oscillator(22050);                       // inicjalizacja oscylatora
               
         int i = 0;
         while (input.read(sampleInput, sizeof(short int))) // przetworzenie danych w petli
         {
             if (i == 44100)                 // sprawdzenie czy wczytano cala sekunde jesli tak to wyzerowanie           
                 i = 0;
-                                        
+            sample = 0;
                                             // pobranie dolnych i gornych bitow 
             sample = sampleInput[0] << 8;  
             sample += sampleInput[1];
 
             // == transfromacja ==
 
-            sample = oscillator.process(sample);                                // pobranie wartosci z oscylatora
+            sample = oscillator.process(0.7 * sample);                                // pobranie wartosci z oscylatora
+            //sampleInput[0] = oscillator.process(sampleInput[0]);                                // pobranie wartosci z oscylatora
                                             // dodanie wartosci spod oscylatora do aktualnie pobranych bitow
             oscillator.sweep();             // aktualizacja oscylatora
                                         
