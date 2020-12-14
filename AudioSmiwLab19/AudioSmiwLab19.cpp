@@ -14,12 +14,20 @@ public:
         this->rate = rate;
     }
 
-    short int process(double xin) {
+    short int process(int16_t xin) {
+        int8_t lowbyte = xin;
+        int8_t highbyte = xin >> 8;
+
         short int yout;
         double m;
 
         m = (double)mod *0.5/ rate;
-        yout = (short int)(m * xin);
+        //std::cout << m << "\n";
+        lowbyte = lowbyte * m;
+        highbyte = highbyte * m;
+        yout = highbyte << 8;
+        yout += lowbyte;
+        //std::cout << yout << "\n";
         return yout;
     }
 
@@ -42,7 +50,7 @@ int main()
 {
     std::ifstream rawInput;
     std::ofstream rawOutput;
-    std::string filename = "acoustic";
+    std::string filename = "1234";
     transform(rawInput, rawOutput, filename);
     return 0;
 }
@@ -56,13 +64,10 @@ void transform(std::ifstream& input, std::ofstream& output, std::string filename
 
     if (input.is_open()) {
 
-        Oscillator oscillator(22050);                       // inicjalizacja oscylatora
+        Oscillator oscillator(8820);                       // inicjalizacja oscylatora
               
-        int i = 0;
         while (input.read(sampleInput, sizeof(short int))) // przetworzenie danych w petli
         {
-            if (i == 44100)                 // sprawdzenie czy wczytano cala sekunde jesli tak to wyzerowanie           
-                i = 0;
             sample = 0;
                                             // pobranie dolnych i gornych bitow 
             sample = sampleInput[0] << 8;  
@@ -70,7 +75,7 @@ void transform(std::ifstream& input, std::ofstream& output, std::string filename
 
             // == transfromacja ==
 
-            sample = oscillator.process(0.7 * sample);                                // pobranie wartosci z oscylatora
+            sample = oscillator.process(sample);                                // pobranie wartosci z oscylatora
             //sampleInput[0] = oscillator.process(sampleInput[0]);                                // pobranie wartosci z oscylatora
                                             // dodanie wartosci spod oscylatora do aktualnie pobranych bitow
             oscillator.sweep();             // aktualizacja oscylatora
@@ -81,7 +86,6 @@ void transform(std::ifstream& input, std::ofstream& output, std::string filename
             sampleInput[0] = sample >> 8;
 
             output.write(sampleInput, sizeof(short int));
-            i++;                            // inkrementacja licznika tablic przechowujacych sekund
         }
         input.close();
         output.close();
